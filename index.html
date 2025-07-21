@@ -27,20 +27,346 @@
 	</head>
 	<body>
 		<div class="container">
-		<h1>CS184/284A Spring 2025 Final Project</h1>
+		<h1>Spermulator 3D-Remake Final Report</h1>
 		<div style="text-align: center;">Names: Sanika Bharvirkar, Circle Chen, Ashley Kao, Grant Zhao</div>
 
-		<figure>
-			<img src="gameplay.png" alt="Preliminary 3D object glow" style="width:70%"/>
-			<figcaption>Spermulator in 2D</figcaption>
-		</figure>
+        <br>
+        Team 7
+        
+		<!--Should be 2-3 pages long when printed-->
 
-        <br>
-		Proposal: <a href="https://akao03.github.io/cs184-final-project-webpage/proposal.html">https://akao03.github.io/cs184-final-project-webpage/proposal.html</a>
-		<br>
-        Milestone Report: <a href="https://akao03.github.io/cs184-final-project-webpage/milestone.html">https://akao03.github.io/cs184-final-project-webpage/milestone.html</a>
-        <br>
-        Final Report: <a href="https://akao03.github.io/cs184-final-project-webpage/final-deliverable.html">https://akao03.github.io/cs184-final-project-webpage/final-deliverable.html</a>
+		<h2>Abstract</h2>
+		<!--A paragraph summary of the entire project-->
+		<p> In this project we turned <a href="https://circlecly.itch.io/spermulator">Spermulator</a>, a 2D game, into 3D. This involved turning all assets into 3D,
+		adapting camera views, and developing new textures that would accurately represent light reflection. Our starting point was a 
+		2D rendering pipeline in Unity with basic game function code and minimal if no shading. Only one of us had Unity experience at all, and only with a 2D pipeline. Over the course of the project, we learned 
+		a lot about Unity's 3D rendering pipeline, including converting all the assets and camera system to 3D. Every shader we made was from 
+		scratch in Unity's shader graph or custom .shader files, with the aid of online YouTube tutorials. We custom made our uterus model mesh and 
+		bacteria mesh in Blender and imported them into Unity, where we brought all the parts together. The result is <a href="https://circlecly.itch.io/spermulator-3d-remake">Spermulator: 3D</a>! 
+		</p>
+
+		<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			<tr>
+			  <td style="text-align: center;">
+				<img src="gamestartingpoint.png" alt="2D Spermulator" style="width:70%"/>
+				<figcaption>Spermulator 2D was our starting point.</figcaption>
+			  </td>
+			  <td style="text-align: center;">
+				<img src="gameplay (1).gif" alt="3D Spermulator" style="width:70%"/>
+				<figcaption>Example of what Spermulator 3D looks like now.</figcaption>
+			  </td>
+			</tr>
+		</table>
+
+
+		<h2>Technical Approach</h2>
+
+			<h3>3D Asset Creation</h3>
+			<p>
+			To convert the original 2D Spermulator game into a 3D experience, we recreated all major assets in 3D, including the player sperm, bacteria cells, immune cells, and the uterus environment. We used a preexisting 3D sperm model and custom-modeled the uterus and bacteria in Blender, leveraging subdivision surface modeling for smoother organic geometry. Asset import and scaling were carefully adjusted to ensure consistency across the scene.
+			</p>
+
+			<h3>3D Freelook Movement and Camera System</h3>
+			<p>
+			Our control system was designed around four goals:<br>
+			(1) Allow the player to look freely using the mouse,<br>
+			(2) Move the player using WASD, relative to the camera,<br>
+			(3) Rotate the sperm model to face its movement direction,<br>
+			(4) Have the camera follow the player without feedback jitter.
+			</p>
+
+			<p>
+			To implement (1), we track pitch and yaw manually and directly rotate the player object based on mouse input. For (2), keyboard input is transformed from camera space to world space using the player’s rotation.
+			</p>
+
+			<p>
+			For (3), the sperm model (a child of the player GameObject) is rotated to face the movement direction without interfering with physics. We apply a fixed correction to account for the model’s default forward direction, then use <code>Quaternion.Slerp</code> for smooth interpolation.
+			</p>
+
+			<p>
+			For (4), we use Cinemachine’s <code>ThirdPersonFollow</code> to follow the player’s position. However, we disable Cinemachine’s <code>PanTilt</code> rotation module to avoid circular dependencies—<code>PanTilt</code> rotates the camera based on input, which would then affect player rotation and feed back into camera movement. By separating input-driven rotation (handled by the player) from camera follow behavior, we achieved stable and consistent controls.
+			</p>
+
+			<h3>Minimap</h3>
+
+			<p>
+			Based on TA suggestions in the proposal and milestone report, we decide to add a minimap to show the egg location and map layout. To do this, we used a secondary camera to render the scene from above. This camera was set to orthographic mode and positioned directly above the player. We then created a Render Texture in Unity and assigned it to the minimap camera. The minimap camera's output was displayed on a UI Raw Image component, allowing us to overlay it on the main game screen. To show the player's location, we transformed the player's position to the minimap's coordinate system and drew a small arrow representing the player, which points towards the player's direction.
+			</p>
+
+			<h3>Procedural Sperm Wiggle Shader</h3>
+			<p>
+			To simulate realistic swimming, we implemented a procedural GPU animation using Unity’s Shader Graph (URP). Rather than rigging a skeletal tail, we applied sinusoidal vertex displacement along the mesh.
+			</p>
+
+			<p>
+			The sperm model uses a custom coordinate system: local X = forward, Y = left, Z = down. In the shader, vertex Y and Z positions are displaced using sine and cosine functions of the form:
+			</p>
+
+			<pre><code>
+			Y += sin(X * frequency + time * speed) * amplitude  
+			Z += cos(X * frequency + time * speed) * amplitude
+			</code></pre>
+
+			<p>
+			This results in a helical tail motion, mimicking 3D swimming behavior. To keep the head stable while animating the tail, we attenuate the amplitude linearly based on X position:
+			</p>
+
+			<pre><code>
+			attenuation = 1 - saturate(X / maxX)
+			</code></pre>
+
+			<p>
+			All displacement occurs in object space to ensure consistent behavior regardless of prefab scale. Our sperm prefab used a non-uniform scale (0.4, 0.4, 1), which required careful handling to avoid distortion.
+			</p>
+
+			<h3>Sperm Glow Shader</h3>
+			<p>The sperm's glow shader was built on top of its existing shader graph from movement. We added two parameters
+				to the shader graph, Color and GlowAmt, to control the color of the sperm and the intensity of its glow respectively.
+				Color also controls the emission of the sperm, and by extension the color of its glow. Next, we added a 
+				Bloom effect to the scenes where we wanted the sperm to glow and adjusted the parameters such that pixels
+				above the threshold brightness would glow with the desired intensity. Finally, to allow the camera to see the post-processing effects, we enabled 
+				post-processing under the camera object's options.
+
+				<figure>
+					<img src="images/final/glow-shader.png" alt="Preliminary 3D object glow" style="width:70%"/>
+					<figcaption>Sperm Glow Shader Graph</figcaption>
+				</figure>
+			</p>
+
+			<h3>Custom Shading for the Game Map, Egg, Bacteria</h3>
+			<p>The shading for the bacteria mucus uses translucency and emissions to simulate the mucus’s semi-transparent appearance. The shader uses a lerp and scrolling speed to make the emission seem translucent as well. </p>
+
+			<p> We compute two scrolling offsets: o1(t) = (t * scrolling_speed), o2(t) = 1 - o1(t)
+				Them we build two tiled offset UV’s from a texture of an electrical current to get two currents rolling against each other: 
+			</p>
+
+			<p>U1​ =T(u∘k+(o1​(t),o1​(t)))</p>
+			<p>U2​ =T(u∘k+(o2​(t),o2​(t)))</p>
+
+			<p>And then lerp them over the current screen color to get the emission:</p>
+			<p>Emission = Lerp(S(u), U1 + U2, 0.5) </p>
+			<p>Where S(u) is the screen color pixel. This gives us the final shader! We use a base color, and then emit over it to create the effect.  This implementation differed
+				from the tutorial because we only really needed the emission effect. Additional, for this shader we chose have an input color so that it was user adjustable.
+			</p>		
+			
+			<figure>
+				<img src="eggshader.png" alt="3D Egg Shader" style="width:70%"/>
+				<figcaption>Glowing 3D Shader with translucency effects.</figcaption>
+			</figure>
+
+			<p>The Game Map uses a combination of displacement mapping and simulated sub surface shading to mimic real flesh.</p>
+			<p>Displacement mapping: </p>
+			<p>We sample height from a height map and then add it to the current vertex position of the object to get our displacement mapping. The math for the new positions looks as follows:</p>
+			<p>position = sample(height_map) * intensity * N + position </p>
+			<p>Where N is the object normal, intensity is a user modified scalar, and position is the object vertex position. 
+				Example of displaced material: 
+				</p>
+
+			<figure>
+				<img src="predisplace.png" alt="3D Map" style="width:70%"/>
+				<figcaption>Map before shader displacement</figcaption>
+			</figure>
+
+			<figure>
+				<img src="postdisplace.png" alt="3D Map" style="width:70%"/>
+				<figcaption>Map after shader displacement</figcaption>
+			</figure>
+
+			<p>We differed from the regular vertex displacement tutorials by displacing by a sample from an height map. This was tricky because Unity expects vertex position in Object space, and 
+				the height map is in World space. We had to convert the height map position to Object space before sampling it, and then convert the sampled value back to World space before adding it to the vertex position. We also differed 
+				from the reference by using an ambient occlusion map to make grooves seem deeper without having to edit our height map, as a common issue we ran into was that 
+				the values from our sampled height map were too low. This meant that to make the bumps seem more apparent, we would accidently make objects much to big, so the ambient occlusion map helped solve that. </p>
+			</p>
+
+			<p>Finally, we need some way for the uterus walls to have that same see-through effect real flesh does, such as when you hold a flashlight against your hand. This wasn’t fully possible in URP (only supported by HDRP), but we simulated it using emissions. Unity doesn’t ship with a function to calculate attenuation and direction from lights other than the main one, so we followed a tutorial and customized the script for our needs. The material emission is such: </p>
+
+			<p>Emission = intensity * shineThroughColor * pointlight_attenuation(world_position)</p>
+
+			<p>We additionally clamped the emission values to ensure the transition between base and emission color are not too harsh.  </p>
+
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+				<tr>
+				  <td style="text-align: center;">
+					<img src="nosubsurface.png" width="400px"/>
+					<figcaption>Uterus Wall without subsurface scattering</figcaption>
+				  </td>
+				  <td style="text-align: center;">
+					<img src="subsurface.png" width="400px"/>
+					<figcaption>Uterus Wall with simulated subsurface scattering</figcaption>
+				  </td>
+				</tr>
+			</table>
+
+			<h3>Geometric Modeling</h3>
+			<p>To construct the map environment of the 3D Spermulator game, we used Blender to model organic structures such as the vagina and uterus.
+				The modeling process began with basic primitive meshes including cylinders, spheres, and cones which served as foundational shapes for the overall structure.
+			   We reshaped these primitives using Bezier curves to guide the organic flow of the forms, especially for the connection between the uterus and the ovaries.
+				This allowed us to define smooth, natural contours with fine control over curvature to allow for a circular bend.
+			   To further refine and deform the geometry, we employed lattice modifiers, which enabled the smooth manipulation of grouped vertices without distorting the overall mesh structure. This was particularly useful for creating the subtle
+				ridges and inner folds characteristic of the vaginal lining as seen in the pictures of the game.
+			   A key technique used to enhance control over the model's shape was the application of Catmull-Clark subdivision surfaces. 
+			   This subdivision method increased the number of faces and edges across the mesh, allowing for greater detail and smoother curvature during sculpting
+				such as for the vaginal canal ridges and bumps. It also gave us finer control over subtle deformations that allow us to transfer over for real-time rendering in Unity.
+			   
+			   Throughout the modeling process, we maintained a focus on structural integrity and scaling. We ensured proper mesh orientation, removed stray or excessive vertices, and corrected flipped normals to prevent lighting and collision issues in Unity.</p>
+			   <table style="width: 100%; text-align: center; border-collapse: collapse;">
+				<tr>
+				  <td style="text-align: center;">
+					<img src="map model.png" width="400px"/>
+					<figcaption>The model of the game in blender</figcaption>
+				  </td>
+				  <td style="text-align: center;">
+					<img src="canal model.png" width="400px"/>
+					<figcaption>The ridges and bends inside the vaginal canal cylinder model in blender</figcaption>
+				  </td>
+				</tr>
+				<tr>
+					<td style="text-align: center;">
+					  <img src="curvature.png" width="400px"/>
+					  <figcaption>the curvature using bezier's curve connecting the uterus and ovaries in blender</figcaption>
+					</td>
+					<td style="text-align: center;">
+					  <img src="barriers.png" width="400px"/>
+					  <figcaption>the barriers inside the ovary in blender but not used in final game</figcaption>
+					</td>
+				  </tr>
+			</table>
+			<h2>Problems Encountered and Solutions</h2>
+
+			<ul>
+			<li>
+				<strong>Transparency Artifacts:</strong> Acid spheres appeared opaque despite having alpha = 0, or failed to render objects behind them. <br>
+				→ Fixed by replacing the Shader Graph material with a standard Unlit Transparent shader, avoiding issues with URP depth sorting.
+			</li>
+			<li>
+				<strong>Player Not Spawning Post-Tutorial:</strong> The player model failed to appear after the tutorial scene. <br>
+				→ Resolved by verifying scene transitions and player instantiation code.
+			</li>
+			<li>
+				<strong>Uterus Wall Mesh Bugs:</strong> Certain areas of the uterus had flipped normals or missing backfaces, allowing the player to escape the map. <br>
+				→ Addressed in Blender by fixing normals and ensuring the material supports two-sided rendering if necessary. Also removed absurdly far away vertices from the main model to ensure correct mesh collider calculation.
+			</li>
+			<li>
+				<strong>Sperm Color Mismatch:</strong> Selected sperm colors didn’t persist between scenes and appeared blue-tinged. <br>
+				→ Persistence was fixed by extending the color handler script. The blue tint was due to color blending in the shader; switching to a white-base texture fixed the final output.
+			</li>
+			<li>
+				<strong>Camera Instability:</strong> Initial use of Cinemachine's <code>PanTilt</code> module led to jittery, recursive control issues. <br>
+				→ Solved by shifting all input-driven rotation logic to the player and using the camera purely for passive following.
+			</li>
+			<li>
+				<strong>Unity Rendering:</strong> Lighting did not render in game, unable to debug shaders due to lack of visual feedback <br>
+				→ Changed URP asset to use URP 3D pipeline instead of 2D, updated graphics settings and shaders.
+			</li>
+			</ul>
+
+			<h2>Lessons Learned</h2>
+
+			<ul>
+			<li><strong>Shader Design Requires Precision:</strong> Understanding object vs world space and non-uniform scaling was crucial for reliable procedural animation.</li>
+			<li><strong>Camera Logic Must Be Decoupled:</strong> Avoiding feedback loops in Cinemachine systems helped create a more polished feel.</li>
+			<li><strong>Model Orientation Matters:</strong> Misaligned import orientations necessitate correction both in logic and shaders; knowing your coordinate system is vital.</li>
+			<li><strong>Testing in Isolation Pays Off:</strong> Simple test scenes—such as a box room for camera testing or stacked transparent spheres—helped isolate and resolve visual issues.</li>
+			<li><strong>Visual Debugging Tools Are Invaluable:</strong> Shader Graph previews, gizmos, and inspector probes were instrumental in debugging visual artifacts.</li>
+			<li><strong>Cross-Disciplinary Collaboration:</strong> Effective teamwork across modeling, scripting, and shading improved productivity and final polish.</li>
+			</ul>
+
+
+		<h2>Results</h2>
+		<!--Your final images, animations, video of your system (whichever is relevant). 
+		You can include results that you think show off what you built but that you did not have time to go over on presentation day.-->
+		The game is now hosted on itch.io, playable directly from the browser on any laptop. Go to this link to play the game: <a href="https://circlecly.itch.io/spermulator-3d-remake">https://circlecly.itch.io/spermulator-3d-remake</a>
+
+		<!--Include side-by-side comparisons of 2D vs new 3D stuff e.g. player, bacteria cells, egg-->
+		<p>Below, we also provide side-by-side comparisons of 2D and 3D Spermulator.</p>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="images/final/s2d-startscreen.png" width="400px"/>
+				  <figcaption>Spermulator 2D Start Screen</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="images/final/s3d-startscreen.png" width="400px"/>
+				  <figcaption>Spermulator 3D Start Screen</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="images/final/s2d-tutorial.png" width="400px"/>
+				  <figcaption>Spermulator 2D Tutorial</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="images/final/s3d-tutorial.png" width="400px"/>
+				  <figcaption>Spermulator 3D Tutorial</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="images/final/s2d-colorpage.png" width="400px"/>
+				  <figcaption>Spermulator 2D Customization Screen</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="images/final/s3d-colorpage.png" width="400px"/>
+				  <figcaption>Spermulator 3D Customization Screen</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="images/final/s2d-interior.png" width="400px"/>
+				  <figcaption>Spermulator 2D Interior</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="images/final/s3d-interior.png" width="400px"/>
+				  <figcaption>Spermulator 3D Interior</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="images/final/s2d-lactic-acid.png" width="400px"/>
+				  <figcaption>Spermulator 2D Acid</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="images/final/s3d-lacticacid.png" width="400px"/>
+				  <figcaption>Spermulator 3D Acid</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="images/final/s2d-mucus.png" width="400px"/>
+				  <figcaption>Spermulator 2D Base and Mucus</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="images/final/s3d-mucus.png" width="400px"/>
+				  <figcaption>Spermulator 3D Base and Mucus</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="images/final/s2d-egg.png" width="400px"/>
+				  <figcaption>Spermulator 2D Egg</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="images/final/s3d-egg.png" width="400px"/>
+				  <figcaption>Spermulator 3D Egg</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+		<h2>References</h2>
+		<ul>
+			<li>Unity Documentation (URP, setting up shader graphs, Modifying Material Colors)</li>
+			<li><a href="https://www.youtube.com/watch?v=KLuyf9gqCik">URP HDR Glow - Unity Shader Graph (MichaelsGameLab, YouTube)</a></li>
+			<li><a href="https://www.youtube.com/watch?v=KlWPedIvwuw">Make Object Transparent in Unity 2022 (Dev Dunk, YouTube)</a></li>
+			<li><a href="https://www.youtube.com/watch?v=ipge1K51JJs">Fast Subsurface scattering shader in Unity URP for mobile</a></li>
+			<li><a href="https://www.youtube.com/watch?v=DpXPhGeCqus">Magical Plasma Orb Part 1 Tutorial</a></li>
+			<li><a href="https://www.texturecan.com/details/137/">Texture Pack for Flesh</a></li>
+		</ul>
+
+		<h2>Contributions</h2>
+		<!--A clear description of the work contributed by each team member.-->
+		<p>Circle Chen, Sanika Bharvirkar, Ashely Kao, Grant Zhou</p>
 
 	</body>
 </html>
