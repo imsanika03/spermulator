@@ -1,0 +1,93 @@
+<html>
+	<head>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+		<style>
+			h1 {
+				text-align: center;
+			}
+
+			.container {
+				margin: 0 auto;
+				padding: 60px 20%;
+			}
+
+			figure {
+				text-align: center;
+			}
+
+			img {
+				display: inline-block;
+			}
+
+			body {
+				font-family: 'Inter', sans-serif;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+		<h1>Spermulator 3D-remake</h1>
+		<div style="text-align: center;">Names: Sanika Bharvirkar, Circle Chen, Ashley Kao, Grant Zhao</div>
+
+        <br>
+        Link to webpage: <a href="https://akao03.github.io/cs184-final-project-webpage/">https://akao03.github.io/cs184-final-project-webpage/</a>
+        <br>
+        
+        <h2>Summary</h2>
+
+		This project aims to build a 3D-remake of a 2D cute sex education simulation game, potentially including shaders.
+
+        <h2>Problem Description</h2>
+
+		One of our members, Circle Chen, has built this amazing game called Spermulator from the Spring 2022 Game Design and Development DeCal. The game can be found at this link: <a href="https://circlecly.itch.io/spermulator.">https://circlecly.itch.io/spermulator</a>. <br> <br>
+		
+		This game is a simulation of the journey of a sperm. The player controls a sperm cell and must navigate through various obstacles to reach the egg. Primary obstacles involving bacteria and cells that produce acid and base, which requires carefully managing the pH of the sperm. Furthermore, the sperm has limited energy budget, so movement has to be carefully planned. The game also includes a functional multiplayer component, where players race against each other to find the egg. <br> <br>
+
+		<figure>
+            <img src="./gameplay.png" alt="Screenshot of the original 2D Spermulator game" style="max-width: 80%;">
+        </figure>
+		
+		The game is designed to be both educational and entertaining, providing players with information about human reproduction while also challenging them to complete the game. In order to further enhance the depth of interaction and spatial immersion, we plan to remake everything in 3D, which would require applying knowledge on 3D modeling, animation, and potentially shaders. <br> <br>
+
+        <h2>Goals and Deliverables</h2>
+
+		What we plan to deliver is a 3D remake of the Spermulator game hosted on itch.io, where viewers could play this game. The game should run at 60 FPS consistently on a modern laptop. If possible, we can include playtests to gather player experience, entertainment, and immersion. All original game functions should be working. This would include: <br>
+
+		<ul>
+		<li>Player controls</li>
+		<li>Game mechanics (pH, energy budget, collision detection)</li>
+		<li>NPC AI (bacteria, cells, competitor sperms)</li>
+		<li>Win/Loss conditions (reaching the egg, other sperms reaching the egg first)</li>
+		<li>Multiplayer</li>
+		<li>Tutorial level</li>
+		</ul>
+		<br>
+
+		The major logic of the game is already implemented in the original game, so what we build on top is introducing 3D modeling, rendering (for example, player vision, and potentially shaders), and animation to the game, to create an even more immersive experience. <br> <br>
+
+		If there is time after the base game runs in 3D, we will attempt to add shaders to enhance the visual experience of the game. The primary things we want to implement in shaders could be:
+		<ul>
+			<li> Fluid effects, which would enhance the biological realism, while illumination and reflections will improve the visual clarity and overall aesthetic appeal. </li>
+			<li> Illumination in the map </li>
+			<li> Light reflections from the cells and sperms </li>
+		</ul>
+
+		<h2>Schedule</h2>
+		<ul>
+			<li>Week 1: All team members familiarize codebase, pick up Unity. Start recreating assets in 3D, using modeling and UV Mapping (sperm, cells, map)</li>
+			
+			<li>Week 2: Reprogram tutorial level, controls, game mechanics in 3D</li>
+
+			<li>Week 3: Reprogram AI, make sure multiplayer is still functional. Integration testing on the base game</li>
+
+			<li>Week 4: If time, shaders. Otherwise, bug fixing and optimization to prepare for the final showcase.</li>
+		</ul>
+
+        <h2>Resources</h2>
+		Unity Tutorials <br> <br>
+		Unity Support for Shaders <br> <br>
+		Photon PUN2 for multiplayer (this was used in the original game) <br> <br>
+
+	</body>
+</html>

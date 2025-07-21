@@ -1,0 +1,109 @@
+<html>
+	<head>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+		<style>
+			h1 {
+				text-align: center;
+			}
+
+			.container {
+				margin: 0 auto;
+				padding: 60px 20%;
+			}
+
+			figure {
+				text-align: center;
+			}
+
+			img {
+				display: inline-block;
+			}
+
+			body {
+				font-family: 'Inter', sans-serif;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+		<h1>Spermulator 3D-Remake Milestone Report</h1>
+		<div style="text-align: center;">Names: Sanika Bharvirkar, Circle Chen, Ashley Kao, Grant Zhao</div>
+
+        <br>
+        Team 7
+        <br>
+        Link to webpage: <a href="https://akao03.github.io/cs184-final-project-webpage/milestone.html">https://akao03.github.io/cs184-final-project-webpage/milestone.html</a>
+        <br>
+        Link to video: <a href="https://drive.google.com/file/d/1gQRHGR9s3rZEzQQpZ5JK1dIQTpprAwWe/view?usp=sharing">https://drive.google.com/file/d/1gQRHGR9s3rZEzQQpZ5JK1dIQTpprAwWe/view?usp=sharing</a>
+        <br>
+		Link to slides:<a href="https://docs.google.com/presentation/d/1-O_gsE9-Gc6-yXC7CnoSOrlRxWPDf9CEVOGWhy-gdyA/edit?slide=id.p#slide=id.p">https://docs.google.com/presentation/d/1-O_gsE9-Gc6-yXC7CnoSOrlRxWPDf9CEVOGWhy-gdyA/edit?slide=id.p#slide=id.p</a>
+		<br>
+        
+        <p>We have made significant progress towards our goal as of April 20th, 2025. <br> <br>
+			
+		First, we were able to make the sperm move in 3D. The player can rotate 360 degrees to look around the map, and they can move the sperm relative to the camera using WASD. The sperm will rotate to face the direction of motion. We also utilized Unity shaders to animate the sperm's tail. We displaced the two coordinates of the tail using sine and cosine functions to create a helical "swimming" motion. At the same time, we were able add glows to our 3D objects using Bloom filters. <br> <br>
+		
+		We are currently polishing 
+        our acidic patches (spheres in the backend) so they can both glow and be transparent. </p>
+
+        <figure>
+			<img src="images/milestone/glow-wip.png" alt="Preliminary 3D object glow" style="width:70%"/>
+			<figcaption>Glowing 3D sperm and spheres. Notice the opaque cube vs the transparent spheres.</figcaption>
+		</figure>
+
+        <p>The 3D model of the uterus is mostly formed and we are continually revising it before we import it to our game. We 
+        have created textures for the uterus and egg. Next steps include creating models and textures for bacteria and
+        finalizing those of the egg alongside updating game functionality for 3D. </p>
+        
+        <p>This short video showcases the new 3D camera view and sperm movement. You may need to open it in a new tab for it to play.</p>
+        <video width="640" height="480">
+            <source src="images/milestone/3dmovement.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+
+        <p>Here we have our 3D uterus model.</p>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="images/milestone/uterus-wip.png" width="400px"/>
+				  <figcaption>The full uterus model.</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="images/milestone/uterus-wip-1.png" width="400px"/>
+				  <figcaption>Closeup of a part of the model.</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+        <p>These are some textures we will be using in our project.</p>
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="images/milestone/egg-texture.png" width="400px"/>
+				  <figcaption>Texture for the egg.</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="images/milestone/uterus-texture-wip.png" width="400px"/>
+				  <figcaption>Textured uterine wall. This scene will be updated with 3D assets.</figcaption>
+				</td>
+			  </tr>
+			</table>
+		</div>
+
+		<p>To test our Uterus texture, we modified the code for the Universal Unity 2D shader to support 3D object space, which is what our final texture and shading will use. The shader
+			simulates lighting from a fixed z position, and applies a normal map to simulate bumps and ridges. We used this shader to test out which textures would suite the uterus lining the best </p>
+		<p>The egg material samples from a texture map, an occlusion map, and a normal map to simulate the grooves and edges of a human cell, and we rendered it in Unity's 3D rendering pipeline. </p>
+        Overall we are making good progress relative to our plans. Our work plan for the time between now and submission includes the following objectives:
+        <ul>
+            <li>Modify the sperm movement such that it only plays when the sperm is moving</li>
+            <li>Finish the fallopian tube and ovary part of the map in Blender</li>
+            <li>Import the finalized uterus model into Unity and integrate it with existing 3D assets (including proper scaling and lighting)</li>
+            <li>Update any other areas (e.g. logic) such that the player can go through the level from beginning to end in a smooth manner</li>
+          </ul>
+
+	</body>
+</html>
